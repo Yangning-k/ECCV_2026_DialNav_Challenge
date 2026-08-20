@@ -70,14 +70,37 @@ should point to the simulator's `build/` directory, matching the
 ## Repository layout
 
 ```text
-src/holistic/       K80 inference pipeline
-src/modules/        DST, GTL, and LANA modules used by the pipeline
-src/tools/          training, sharding, merging, and local scoring
-scripts/            single entrypoint scripts
-assets/base/        official RAINbow checkpoints and evaluation data
-assets/fan/         K80 weights, training inputs used by the release scripts, and final submission
-outputs/            generated inference and merged submission files
+FAN_k80_release
+|-- README.md               this document
+|-- .env.example            environment template (python + simulator paths)
+|-- environment.yml         conda environment
+|-- requirements.txt        python dependencies
+|-- LICENSE / NOTICE / DATA_LICENSE.md
+|-- scripts/
+|   |-- common.sh           path/env setup shared by all scripts
+|   |-- download_hf_assets.sh  fetch assets/ from Hugging Face (code-only checkouts)
+|   |-- setup.sh / verify.sh   environment checks and asset verification
+|   |-- run_all.sh          full K80 inference (per-shard scene caches)
+|   |-- make_shards.sh / merge.sh / score.sh   sharding, merging, local scoring
+|   |-- train_ans.sh        answer/QA localizer training (ans | qa)
+|   `-- train_reranker.sh   end-to-end reranker training (union + offloc, 0.6/0.4 average)
+|-- src/
+|   |-- holistic/           K80 inference pipeline (main.py, ModularGuide/Navigator, evaluator, holistic_models/)
+|   |-- modules/            DST, GTL, and LANA modules used by the pipeline
+|   `-- tools/              training, sharding, merging, and local scoring scripts
+|-- assets/                 populated by download_hf_assets.sh (or present in the self-contained package)
+|   |-- base/dataset/       official RAINbow checkpoints, features, connectivity, annotations
+|   |-- fan/weights/        fine-tuned localizers and the final reranker
+|   |-- fan/training_data/  answer/QA data and 12k hard-negative candidate sets
+|   |-- fan/final/          FAN_k80.json (submission file)
+|   `-- manifest/           assets.sha256 and release_manifest.json
+|-- hf_manifest/            checksums and manifest for the Hugging Face assets
+`-- outputs/                generated inference and merged submission files (gitignored)
 ```
+
+`assets/` is excluded from this code repository and is fetched from Hugging
+Face (`Njoker/FAN_DialNav_2026`) by `scripts/download_hf_assets.sh`; the
+self-contained package includes it directly.
 
 The FAN pipeline derives all runtime paths from `scripts/common.sh` and the two
 required variables in `.env`; upstream RAINbow module defaults are overridden
