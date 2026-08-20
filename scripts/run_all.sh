@@ -16,7 +16,10 @@ run_group() {
     local pids=()
     for ((idx=start; idx<end; idx++)); do
       local gpu=$((idx % GPU_COUNT))
-      bash "$FAN_RELEASE_ROOT/scripts/infer.sh" "$split" "$idx" "$gpu" "k80_${split}_${idx}" &
+      local cache_dir="$FAN_RELEASE_ROOT/.cache/scene_cache_${split}_${idx}"
+      mkdir -p "$cache_dir"
+      GTL_SCENE_CACHE_DIR_OVERRIDE="$cache_dir" \
+        bash "$FAN_RELEASE_ROOT/scripts/infer.sh" "$split" "$idx" "$gpu" "k80_${split}_${idx}" &
       pids+=("$!")
     done
     for pid in "${pids[@]}"; do

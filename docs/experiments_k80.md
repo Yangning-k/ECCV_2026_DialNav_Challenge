@@ -1,6 +1,6 @@
 # K80 training data and reproduced metrics
 
-## Exact training inputs
+## Training inputs used by the release scripts
 
 | File | Rows |
 | --- | ---: |

@@ -8,11 +8,13 @@ Challenge:
 
 The method is a compliant natural-language dialog pipeline built on the
 released RAINbow checkpoints. It adds answer/QA grounding, a larger candidate
-pool, and a hard-negative path-answer reranker. It does **not** inject the
-ground-truth path into the Navigator. After receiving the Guide's
+pool, and a path-answer reranker (a 0.6/0.4 weight average of two contrastive
+rerankers trained on hard-negative candidate paths). It does **not** inject
+the ground-truth path into the Navigator. After receiving the Guide's
 natural-language answer, the Navigator uses its own answer/QA grounding and
 path-answer reranking modules to plan the next waypoint along the scene graph;
-the Guide communicates only natural language.
+the Guide communicates only natural language. The Guide knows the destination
+by task design and conveys it to the Navigator only through natural language.
 
 ## Final results
 
@@ -36,20 +38,17 @@ cp .env.example .env
 #   DIALNAV_PYTHON=/path/to/python
 #   DIALNAV_MATTERPORT_SIM_BUILD=/path/to/Matterport3DSimulator/build
 
-HF_REPO_ID=Njoker/FAN_DialNav_2026 bash scripts/download_hf_assets.sh   # fetch assets/ (weights, features, connectivity) from Hugging Face
+HF_REPO_ID=Njoker/FAN_DialNav_2026 bash scripts/download_hf_assets.sh   # for code-only GitHub checkouts: fetch assets/ from Hugging Face
 bash scripts/setup.sh
 bash scripts/verify.sh
 bash scripts/run_all.sh
 bash scripts/score.sh outputs/FAN_k80_repro.json
 ```
 
-This repository is the code release; the large assets (official checkpoints,
-features, connectivity, fine-tuned weights, and training data) are hosted on
-Hugging Face under `Njoker/FAN_DialNav_2026` and downloaded into `assets/` by
-the command above.
-
 `scripts/run_all.sh` runs the K80 shards and merges them into
-`outputs/FAN_k80_repro.json`. The expected output is the table above.
+`outputs/FAN_k80_repro.json`. The offline test SR (80.35), the ranking metric,
+is reproduced exactly; development-split SR may vary by about +/-1 across
+checkpoints. The expected output is the table above.
 
 ## Environment
 
@@ -76,17 +75,18 @@ src/modules/        DST, GTL, and LANA modules used by the pipeline
 src/tools/          training, sharding, merging, and local scoring
 scripts/            single entrypoint scripts
 assets/base/        official RAINbow checkpoints and evaluation data
-assets/fan/         K80 weights, exact training inputs, and final submission
+assets/fan/         K80 weights, training inputs used by the release scripts, and final submission
 outputs/            generated inference and merged submission files
 ```
 
-No local paths are hardcoded. All paths are derived from `scripts/common.sh` and
-the two required variables in `.env`.
+The FAN pipeline derives all runtime paths from `scripts/common.sh` and the two
+required variables in `.env`; upstream RAINbow module defaults are overridden
+by the pipeline's command-line arguments.
 
 ## Training the custom K80 components
 
-Answer, QA, and base-answer grounding training inputs are included under
-`assets/fan/training_data/`.
+Answer and QA grounding training inputs are included under
+`assets/fan/training_data/`. All runs use seed 0.
 
 ### Reproducing the final test SR 80.35
 
@@ -115,11 +115,13 @@ bash scripts/train_reranker.sh     # end-to-end reranker training (test 80.35)
 
 ### Training data
 
-All training inputs are included under `assets/fan/training_data/`: answer and
-QA grounding sets, the 12k hard-negative candidate sets
-(`aug_rerank_hard_train_12000_union.jsonl` and
-`aug_rerank_hard_train_12000_offloc.jsonl`) used by `scripts/train_reranker.sh`,
-and the reranker validation set `aug_rerank_val.jsonl`.
+All training inputs are included in the Hugging Face assets (downloaded by
+`scripts/download_hf_assets.sh`) and, in the self-contained package, under
+`assets/fan/training_data/`: answer and QA grounding sets, the 12k
+hard-negative candidate sets (`aug_rerank_hard_train_12000_union.jsonl` and
+`aug_rerank_hard_train_12000_offloc.jsonl`) used by
+`scripts/train_reranker.sh`, and the reranker validation set
+`aug_rerank_val.jsonl`.
 
 The expected training data row counts are listed in
 `docs/experiments_k80.md`.
