@@ -1,0 +1,13 @@
+name: fan-dialnav-k80
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pytorch=2.6.0
+  - pytorch-cuda=12.4
+  - pip
+  - pip:
+      - -r requirements.txt
+

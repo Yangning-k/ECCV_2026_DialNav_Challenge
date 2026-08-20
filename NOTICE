@@ -1,0 +1,12 @@
+This repository includes code and models derived from the following projects:
+
+- RAINbow: https://github.com/happilee12/RAINbow
+- DialNav: https://happilee12.github.io/DialNav/
+- LANA: https://github.com/wxh1996/LANA-VLN
+- ScaleVLN: https://github.com/wz0919/ScaleVLN
+- DUET: https://github.com/cshizhe/VLN-DUET
+- Graph LED / GCN localization: https://github.com/meera1hahn/Graph_LED
+- Matterport3D Simulator: https://github.com/peteanderson80/Matterport3DSimulator
+
+Their respective licenses and terms apply to the corresponding components.
+

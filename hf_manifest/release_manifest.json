@@ -1,0 +1,47 @@
+{
+  "method_name": "RAINbow-DST-GTL-Rerank-v9-Final-K80",
+  "final_submission": "assets/fan/final/FAN_k80.json",
+  "results": {
+    "test": {"SR": 80.35, "oracle_SR": 83.16, "DTC": 2.61, "score": null},
+    "val_unseen": {"SR": 74.69, "oracle_SR": 77.18, "DTC": 2.34, "score": 0.7098},
+    "val_seen": {"SR": 76.92, "oracle_SR": 82.42, "DTC": 1.76, "score": 0.7458}
+  },
+  "environment": {
+    "python": "3.10",
+    "pytorch": "2.6.0+cu124",
+    "cuda": "12.4"
+  },
+  "inference": {
+    "RERANK_K": 80,
+    "RERANK_ALPHA": 5,
+    "RERANK_BATCH": 2,
+    "RERANK_TEXTS": "tail,last,qa",
+    "ANS_CKPT": "assets/fan/weights/gtl_ans_ckpt_aug/snapshot5000.pth",
+    "ANS_CKPT2": "assets/fan/weights/gtl_ans_ckpt_qa/final.pth",
+    "RERANK_CKPT": "assets/fan/weights/gtl_rerank_ckpt_avg_uo_6/best.pth",
+    "LOC_CAND_K": 20,
+    "WTA_MODE": "ct_0.6_cap_3"
+  },
+  "reproduce_commands": [
+    "cp .env.example .env",
+    "bash scripts/setup.sh",
+    "bash scripts/verify.sh",
+    "bash scripts/run_all.sh",
+    "bash scripts/score.sh outputs/FAN_k80_repro.json"
+  ],
+  "training_commands": [
+    "bash scripts/train_ans.sh ans",
+    "bash scripts/train_ans.sh qa",
+    "bash scripts/train_reranker.sh"
+  ],
+  "reranker_provenance": {
+    "final_train_files": [
+      "assets/fan/training_data/aug_rerank_hard_train_12000_union.jsonl",
+      "assets/fan/training_data/aug_rerank_hard_train_12000_offloc.jsonl"
+    ],
+    "final_train_rows": 12000,
+    "recipe": "train two contrastive path-answer rerankers (seed 0, 3000 steps, batch 1, NEG=4, lr 1e-5), then weight-average 0.6/0.4",
+    "measured_test_sr": 80.35,
+    "note": "Training follows the recipe above; the submitted leaderboard weights are also provided as gtl_rerank_ckpt_hard/best_original.pth."
+  }
+}

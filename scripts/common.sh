@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+FAN_RELEASE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+if [[ -f "$FAN_RELEASE_ROOT/.env" ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "$FAN_RELEASE_ROOT/.env"
+  set +a
+fi
+
+: "${DIALNAV_PYTHON:=python3}"
+: "${DIALNAV_MATTERPORT_SIM_BUILD:=}"
+: "${DIALNAV_LD_LIBRARY_PATH:=}"
+: "${DIALNAV_SITE_PACKAGES:=}"
+
+if [[ -z "$DIALNAV_MATTERPORT_SIM_BUILD" ]]; then
+  echo "DIALNAV_MATTERPORT_SIM_BUILD is not set. Edit .env or export it." >&2
+  exit 1
+fi
+
+export FAN_RELEASE_ROOT
+export DIALNAV_REPO_ROOT="$FAN_RELEASE_ROOT"
+export DIALNAV_ASSETS_DIR="$FAN_RELEASE_ROOT/assets"
+export DIALNAV_BASE_REPO="$FAN_RELEASE_ROOT/assets/base"
+export DIALNAV_BERT_TOKENIZER_DIR="$FAN_RELEASE_ROOT/src/modules/qa/LANA/tokenizer_files/bert-base-uncase"
+export DIALNAV_FAN_WEIGHTS_DIR="$FAN_RELEASE_ROOT/assets/fan/weights"
+export DIALNAV_TRAINING_DATA_DIR="$FAN_RELEASE_ROOT/assets/fan/training_data"
+export DIALNAV_SHARD_DIR="$FAN_RELEASE_ROOT/.cache/shards"
+export DIALNAV_SCENE_CACHE_DIR="$FAN_RELEASE_ROOT/.cache/scene_cache"
+export DIALNAV_HF_HOME="$FAN_RELEASE_ROOT/.cache/hf"
+
+SRC_DIR="$FAN_RELEASE_ROOT/src"
+BASE_REPO="$DIALNAV_BASE_REPO"
+FAN_WEIGHTS_DIR="$DIALNAV_FAN_WEIGHTS_DIR"
+TRAINING_DATA_DIR="$DIALNAV_TRAINING_DATA_DIR"
+SHARD_DIR="$DIALNAV_SHARD_DIR"
+SCENE_CACHE_DIR="$DIALNAV_SCENE_CACHE_DIR"
+HF_HOME="$DIALNAV_HF_HOME"
+
+PYTHONPATH="$SRC_DIR/holistic:$SRC_DIR:$SRC_DIR/modules/loc/GTL/gtl:$DIALNAV_MATTERPORT_SIM_BUILD"
+if [[ -n "$DIALNAV_SITE_PACKAGES" ]]; then
+  PYTHONPATH="$DIALNAV_SITE_PACKAGES:$PYTHONPATH"
+fi
+export PYTHONPATH="$PYTHONPATH:${PYTHONPATH_OLD:-}"
+
+if [[ -n "$DIALNAV_LD_LIBRARY_PATH" ]]; then
+  export LD_LIBRARY_PATH="$DIALNAV_LD_LIBRARY_PATH:${LD_LIBRARY_PATH:-}"
+fi
+
+export HF_HOME
+export TRANSFORMERS_OFFLINE=1
+export HF_HUB_OFFLINE=1
+export PYTHONHASHSEED=0
+export OMP_NUM_THREADS=4
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True,max_split_size_mb:64
+
+mkdir -p "$SHARD_DIR" "$SCENE_CACHE_DIR" "$HF_HOME" "$FAN_RELEASE_ROOT/outputs"

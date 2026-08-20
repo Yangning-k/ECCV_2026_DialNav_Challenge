@@ -1,0 +1,11 @@
+numpy==1.23.5
+transformers==4.30.0
+h5py==3.11.0
+networkx==2.5.1
+Shapely==1.7.1
+easydict==1.9
+tqdm==4.62.0
+jsonlines==2.0.0
+ftfy==6.1.1
+nltk==3.9.1
+
