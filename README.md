@@ -50,6 +50,17 @@ bash scripts/score.sh outputs/FAN_k80_repro.json
 is reproduced exactly; development-split SR may vary by about +/-1 across
 checkpoints. The expected output is the table above.
 
+## Resources and runtime
+
+- Inference (`scripts/run_all.sh`) runs 16 shards in parallel and defaults to
+  **8 GPUs**; set `GPU_COUNT` to use fewer (shards are launched in waves).
+  Expected wall time is roughly 1 hour on 8 GPUs.
+- Training (`scripts/train_reranker.sh`) needs **1 GPU** and takes roughly
+  one hour (two 3,000-step reranker trainings plus the weight average).
+- The full inference configuration (candidate pool K, text variants,
+  localization candidates, WTA policy, etc.) is listed in
+  `docs/experiments_k80.md`.
+
 ## Environment
 
 - Python 3.10
